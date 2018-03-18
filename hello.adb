@@ -1,21 +1,44 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Integer_Text_IO; use Ada.Integer_Text_IO;
+with Ada.Numerics.Discrete_Random;
 
 procedure Hello is
-type Integer_Array is array(Positive range<>) of Integer;
-
-function Get_Input_Array return Integer_Array is
-N : Integer := Integer'Value(Get_Line);
-Elements : Integer_Array(1..N);
+    type Integer_Array is array(Positive range<>) of Integer;
+    package Random_Integer is new Ada.Numerics.Discrete_Random(Result_Subtype=>Integer);
+    use Random_Integer;
+    function Get_Input_Array return Integer_Array is
+        N : Integer := Integer'Value(Get_Line);
+        Elements : Integer_Array(1..N);
+    begin
+        for I in 1..N loop
+            Elements(I) := Integer'Value(Get_Line);
+        end loop;
+        return Elements;
+    end Get_Input_Array;
+    function Random_Integer_In_Range(Lower, Higher: Integer; G: Generator) return Integer is
+    begin
+        return (Random(G) mod (Higher-Lower + 1)) + Lower;
+    end Random_Integer_In_Range;
+    function Knuth_Shuffle(Input_Array: Integer_Array; G: Generator) return Integer_Array is
+        Output_Array : Integer_Array(1..Input_Array'Length);
+        J : Integer;
+    begin
+        for I in 1..Input_Array'Length loop
+            J := Random_Integer_In_Range(1, I, G);
+            if (J /= I) then
+                Output_Array(I) := Output_Array(J);
+            end if;
+            Output_Array(J) := Input_Array(I);
+        end loop;
+        return Output_Array;
+    end Knuth_Shuffle;
+    Input_Elements : Integer_Array := Get_Input_Array;
+    Shuffled : Integer_Array (1..Input_Elements'Length);
+    G: Generator;
 begin
-    for I in 1..N loop
-        Elements(I) := Integer'Value(Get_Line);
-    end loop;
-    return Elements;
-end Get_Input_Array;
-Input_Elements : Integer_Array := Get_Input_Array;
-begin
-    for I in 1..Input_Elements'Length loop
-        Put(Input_Elements(I)); New_Line;
+    Reset(G);
+    Shuffled := Knuth_Shuffle(Input_Elements, G);
+    for I in 1..Shuffled'Length loop
+        Put(Shuffled(I)); New_Line;
     end loop;
 end Hello;
