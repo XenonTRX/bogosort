@@ -23,12 +23,12 @@ procedure Hello is
     end Random_Integer_In_Range;
     
     function Knuth_Shuffle(Input_Array: Integer_Array; G: Generator) return Integer_Array is
-        Output_Array : Integer_Array(1..Input_Array'Length);
+        Output_Array : Integer_Array(Input_Array'Range);
         J : Integer;
     begin
-        for I in 1..Input_Array'Length loop
-            J := Random_Integer_In_Range(1, I, G);
-            if (J /= I) then
+        for I in Input_Array'Range loop
+            J := Random_Integer_In_Range(Input_Array'First, I, G);
+            if J /= I then
                 Output_Array(I) := Output_Array(J);
             end if;
             Output_Array(J) := Input_Array(I);
@@ -48,16 +48,29 @@ procedure Hello is
         return True;
     end Is_Sorted;
 
-    --function Binary_Bogosort(Input_Array: Integer_Array; G: Generator) return Integer_Array is
-    
-    --end Binary_Bogosort;
+    function Binary_Bogosort(Input_Array: Integer_Array; G: Generator) return Integer_Array is
+        Shuffled_Array : Integer_Array (Input_Array'Range);
+        Middle : Integer := (Input_Array'First + Input_Array'Last)/2;
+    begin
+        if Input_Array'Length < 2 then
+            return Input_Array;
+        end if;
+        Shuffle_Loop : loop
+            Shuffled_Array := Knuth_Shuffle(Input_Array, G);
+            Shuffled_Array(Shuffled_Array'First..Middle) := Binary_Bogosort(Shuffled_Array(Shuffled_Array'First..Middle), G);
+            Shuffled_Array(Middle+1..Shuffled_Array'Last) := Binary_Bogosort(Shuffled_Array(Middle+1..Shuffled_Array'Last),G);
+            exit Shuffle_Loop when Is_Sorted(Shuffled_Array);
+        end loop Shuffle_Loop;
+        return Shuffled_array;
+    end Binary_Bogosort;
+
     Input_Elements : Integer_Array := Get_Input_Array;
-    Shuffled : Integer_Array (1..Input_Elements'Length);
+    Sorted : Integer_Array (1..Input_Elements'Length);
     G: Generator;
 begin
     Reset(G);
-    Shuffled := Knuth_Shuffle(Input_Elements, G);
-    for I in 1..Shuffled'Length loop
-        Put(Shuffled(I)); New_Line;
+    Sorted := Binary_Bogosort(Input_Elements, G);
+    for I in 1..Sorted'Length loop
+        Put(Sorted(I)); New_Line;
     end loop;
 end Hello;
